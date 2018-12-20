@@ -19,8 +19,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "glob.h"
 #include <unistd.h>
-#include <glob.h>
 #include <fnmatch.h>
 
 #include <fluent-bit/flb_input.h>

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(fluent-bit)
 
 # Update CFLAGS
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC ")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
 else()
@@ -15,7 +15,7 @@ include(cmake/FindJournald.cmake)
 include(cmake/FindMonkey.cmake)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/sanitizers-cmake/cmake" ${CMAKE_MODULE_PATH})
 find_package(Sanitizers)
-
+find_package (Threads REQUIRED)
 # Output paths
 set(FLB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
@@ -30,10 +30,10 @@ set(FLB_VERSION_STR "${FLB_VERSION_MAJOR}.${FLB_VERSION_MINOR}.${FLB_VERSION_PAT
 
 # Build Options
 option(FLB_ALL                "Enable all features"           No)
-option(FLB_DEBUG              "Build with debug symbols"      No)
+option(FLB_DEBUG              "Build with debug symbols"      Yes)
 option(FLB_COVERAGE           "Build with code-coverage"      No)
 option(FLB_JEMALLOC           "Build with Jemalloc support"   No)
-option(FLB_REGEX              "Build wiht Regex support"     Yes)
+option(FLB_REGEX              "Build wiht Regex support"   Yes)
 option(FLB_TLS                "Build with SSL/TLS support"    No)
 option(FLB_BINARY             "Build executable binary"      Yes)
 option(FLB_EXAMPLES           "Build examples"               Yes)
@@ -45,10 +45,10 @@ option(FLB_TESTS_INTERNAL     "Enable internal tests"         No)
 option(FLB_MTRACE             "Enable mtrace support"         No)
 option(FLB_POSIX_TLS          "Force POSIX thread storage"    No)
 option(FLB_INOTIFY            "Enable inotify support"       Yes)
-option(FLB_SQLDB              "Enable SQL embedded DB"        No)
+option(FLB_SQLDB              "Enable SQL embedded DB"        Yes)
 option(FLB_HTTP_SERVER        "Enable HTTP Server"            No)
-option(FLB_BACKTRACE          "Enable stacktrace support"    Yes)
-option(FLB_LUAJIT             "Enable Lua Scripting support" Yes)
+option(FLB_BACKTRACE          "Enable stacktrace support"    No)
+option(FLB_LUAJIT             "Enable Lua Scripting support" No)
 option(FLB_STATIC_CONF        "Build binary using static configuration")
 option(FLB_CORO_STACK_SIZE    "Set coroutine stack size")
 
@@ -58,7 +58,7 @@ option(FLB_CORO_STACK_SIZE    "Set coroutine stack size")
 option(FLB_METRICS            "Enable metrics support"       No)
 
 # Proxy Plugins
-option(FLB_PROXY_GO           "Enable Go plugins support"   Yes)
+option(FLB_PROXY_GO           "Enable Go plugins support"   No)
 
 # Advanced options for Flushing methods
 # =====================================
@@ -80,7 +80,7 @@ option(FLB_IN_DISK            "Enable Disk input plugin"           Yes)
 option(FLB_IN_EXEC            "Enable Exec input plugin"           Yes)
 option(FLB_IN_FORWARD         "Enable Forward input plugin"        Yes)
 option(FLB_IN_HEALTH          "Enable Health input plugin"         Yes)
-option(FLB_IN_HTTP            "Enable HTTP input plugin"            No)
+option(FLB_IN_HTTP            "Enable HTTP input plugin"           No)
 option(FLB_IN_MEM             "Enable Memory input plugin"         Yes)
 option(FLB_IN_KMSG            "Enable Kernel log input plugin"     Yes)
 option(FLB_IN_LIB             "Enable library mode input plugin"   Yes)
@@ -126,7 +126,7 @@ option(FLB_FILTER_PARSER      "Enable parser filter"               Yes)
 option(FLB_FILTER_KUBERNETES  "Enable kubernetes filter"           Yes)
 option(FLB_FILTER_THROTTLE    "Enable throttle filter"             Yes)
 option(FLB_FILTER_NEST        "Enable nest filter"                 Yes)
-option(FLB_FILTER_LUA         "Enable Lua scripting filter"        Yes)
+option(FLB_FILTER_LUA         "Enable Lua scripting filter"        No)
 option(FLB_FILTER_RECORD_MODIFIER "Enable record_modifier filter"  Yes)
 
 # Enable all features
@@ -285,6 +285,7 @@ if(FLB_METRICS)
 endif()
 
 if(FLB_IN_TAIL)
+  message("FLB In tail enabled")
   set(FLB_SQLDB ON)
 endif()
 
@@ -446,12 +447,12 @@ endif()
 # LibBacktrace (friendly stacktrace support)
 # =========================================
 if(FLB_BACKTRACE)
-  FLB_DEFINITION(FLB_HAVE_LIBBACKTRACE)
-  ExternalProject_Add(backtrace
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbacktrace-5a99ff7f/
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbacktrace-5a99ff7f/configure ${AUTOCONF_HOST_OPT} --prefix=<INSTALL_DIR> --enable-shared=no --enable-static=yes
-    BUILD_COMMAND $(MAKE)
-    )
+ FLB_DEFINITION(FLB_HAVE_LIBBACKTRACE)
+#  ExternalProject_Add(backtrace
+#    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbacktrace-5a99ff7f/
+#    CONFIGURE_COMMAND --host aarch64 ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbacktrace-5a99ff7f/configure ${AUTOCONF_HOST_OPT} --prefix=<INSTALL_DIR> --enable-shared=no --enable-static=yes
+#    BUILD_COMMAND $(MAKE)
+#    )
   add_library(libbacktrace STATIC IMPORTED GLOBAL)
   set_target_properties(libbacktrace PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/backtrace-prefix/lib/libbacktrace.a")
   add_dependencies(libbacktrace backtrace)
@@ -461,13 +462,13 @@ endif()
 # Onigmo (Regex Engine)
 # =====================
 if(FLB_REGEX)
-  ExternalProject_Add(onigmo
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/onigmo
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/lib/onigmo/configure ${AUTOCONF_HOST_OPT} --with-pic --disable-shared --enable-static --prefix=<INSTALL_DIR>
-    CFLAGS=-std=gnu99\ -Wall\ -pipe\ -g3\ -O3\ -funroll-loops
-    BUILD_COMMAND $(MAKE)
-    INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/
-    INSTALL_COMMAND $(MAKE) install)
+#  ExternalProject_Add(onigmo
+#    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/onigmo
+#    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/lib/onigmo/configure ${AUTOCONF_HOST_OPT} --with-pic --disable-shared --enable-static --prefix=<INSTALL_DIR>
+#    CFLAGS=-std=gnu99\ -Wall\ -pipe\ -g3\ -O3\ -funroll-loops
+#    BUILD_COMMAND $(MAKE)
+#    INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/
+#    INSTALL_COMMAND $(MAKE) install)
   add_library(libonigmo STATIC IMPORTED GLOBAL)
   set_target_properties(libonigmo PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/lib/libonigmo.a")
   add_dependencies(libonigmo onigmo)

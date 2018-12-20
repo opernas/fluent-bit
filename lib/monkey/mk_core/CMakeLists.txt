@@ -6,6 +6,7 @@ set(src
   mk_memory.c
   mk_event.c
   mk_utils.c
+  glob.c
   )
 
 # Headers

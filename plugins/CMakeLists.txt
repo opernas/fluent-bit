@@ -89,16 +89,15 @@ endmacro()
 # ======================
 
 # These plugins works only on Linux
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+#if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   REGISTER_IN_PLUGIN("in_cpu")
   REGISTER_IN_PLUGIN("in_mem")
   REGISTER_IN_PLUGIN("in_kmsg")
-  REGISTER_IN_PLUGIN("in_tail")
   REGISTER_IN_PLUGIN("in_proc")
   REGISTER_IN_PLUGIN("in_disk")
   REGISTER_IN_PLUGIN("in_systemd")
   REGISTER_IN_PLUGIN("in_netif")
-endif()
+#endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   REGISTER_IN_PLUGIN("in_tail")
@@ -115,6 +114,7 @@ if (NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
   REGISTER_IN_PLUGIN("in_serial")
 endif()
 
+REGISTER_IN_PLUGIN("in_tail")
 REGISTER_IN_PLUGIN("in_stdin")
 REGISTER_IN_PLUGIN("in_tcp")
 REGISTER_IN_PLUGIN("in_mqtt")

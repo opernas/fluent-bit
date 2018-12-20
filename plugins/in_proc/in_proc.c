@@ -28,7 +28,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <glob.h>
+#include "glob.h"
 #include <libgen.h>
 #include <unistd.h>
 #include <stdlib.h>

@@ -46,6 +46,7 @@ include_directories(
   ../lib/jsmn
   ../lib/msgpack-c-0b7cabd/include
   ../lib/monkey/include/
+  ../lib/monkey/include/mk_core/
   ../lib/luajit-2.0.5/src/
   ${extra_headers}
   )
@@ -163,7 +164,7 @@ endif()
 if(NOT CMAKE_SYSTEM_NAME MATCHES "Darwin")
   set(FLB_DEPS
     ${FLB_DEPS}
-    rt
+    #rt
     )
 endif()
 
@@ -204,7 +205,7 @@ set(FLB_DEPS
 if(FLB_SHARED_LIB)
   add_library(fluent-bit-shared SHARED ${src})
   add_sanitizers(fluent-bit-shared)
-  target_link_libraries(fluent-bit-shared ${FLB_DEPS} -lpthread)
+  target_link_libraries(fluent-bit-shared ${FLB_DEPS} )
   set_target_properties(fluent-bit-shared
     PROPERTIES OUTPUT_NAME fluent-bit)
 

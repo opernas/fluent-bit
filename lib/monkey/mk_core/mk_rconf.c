@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <glob.h>
+#include <mk_core/glob.h>
 
 #include <mk_core/mk_rconf.h>
 #include <mk_core/mk_utils.h>
